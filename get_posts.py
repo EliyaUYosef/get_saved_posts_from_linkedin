@@ -98,7 +98,7 @@ def click_show_more_button():
 
 # Linkedin credentials
 username = "eliya.yosef@gmail.com"
-password = "GRq_VWy6gR*eG?G"
+password = "_______________"
 
 db_port = int(os.getenv("DB_PORT"))
 

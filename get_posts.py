@@ -23,9 +23,11 @@ class Post:
     def __str__(self):
         return (
             # f"post_writer_profile_url: {self.post_writer_profile_url},"
+            f"\n"+"- - - - - - - - - - - -"
             f"\n{self.writer_details},"
-            f"\n- - - - - - - -"
+            f"\n"+"- - - - - - - - - - - -"
             f"\n{self.post_title},\n"
+            f"\n"+"- - - - - - - - - - - -"
             # f"\n\npost_link: {self.post_link},"
             # f"\n\nwriter_image: {self.writer_image}"
         )
@@ -122,7 +124,7 @@ insert_query = (
 )
 
 login_to_linkedin(username, password)
-time.sleep(10)
+time.sleep(20)
 print("\033[91msleeped\033[0m")
 
 driver.get("https://www.linkedin.com/my-items/saved-posts/")
@@ -172,21 +174,29 @@ while True and i < 10:
             )
             print(poster)
             if contains_keywords(post_data, ["js", "javascript"]):
-                print("0")
                 try:
-                    print("1")
-                    print(insert_query)
-                    print("\n- - - - + + + - - - - \n")
-                    print(len(post_data))
                     cursor.execute(insert_query, post_data)
-                    print("2")
                     i+=1
-                    print("3")
                     mysql_config.commit()
-                    print("4")
                 except MySQLdb.IntegrityError as e:
-                    print("\033[91m#\nDuplicates entries on DB\033[0m\n")
-                    mysql_config.rollback()  
+                    if "Duplicate entry" in str(e):
+                        print("\033[91m#\nDuplicate entries on DB\033[0m\n")
+                        # Handle duplicate entry case here
+                    elif "foreign key constraint fails" in str(e):
+                        print("\033[91m#\nForeign key constraint violation\033[0m\n")
+                        # Handle foreign key violation case here
+                    else:
+                        print("\033[91m#\nOther IntegrityError: {}\033[0m\n".format(e))
+                        # Handle other IntegrityError cases here
+                        mysql_config.rollback()  # Rollback changes
+                except MySQLdb.Error as e:
+                    print("\033[91m#\nMySQL Error: {}\033[0m\n".format(e))
+                    # Handle other MySQL errors here
+                    mysql_config.rollback()  # Rollback changes
+                except Exception as e:
+                    print("\033[91m#\nUnexpected Error: {}\033[0m\n".format(e))
+                    # Handle other unexpected errors here
+                    mysql_config.rollback()  # Rollback changes
                 time.sleep(2)
             else:
                 print("\033[93m#\nSkipping row - 'writer_details' does not contain 'JS'\033[0m\n")
